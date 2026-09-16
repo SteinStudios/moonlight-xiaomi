@@ -1,0 +1,30 @@
+name: Sync upstream
+on:
+  schedule:
+    - cron: '17 4 * * *'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: moonlight-noir
+          fetch-depth: 0
+      - name: Merge upstream
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote add upstream https://github.com/ClassicOldSong/moonlight-android.git
+          git fetch upstream moonlight-noir
+          BEFORE=$(git rev-parse HEAD)
+          git merge --no-edit upstream/moonlight-noir
+          AFTER=$(git rev-parse HEAD)
+          if [ "$BEFORE" = "$AFTER" ]; then
+            echo "Ingen nye upstream-commits."
+          else
+            git push origin moonlight-noir
+            echo "Merged og pushet: $BEFORE -> $AFTER"
+          fi
